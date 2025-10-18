@@ -12,23 +12,35 @@ export default defineConfig(({ mode }) => {
         jsxRuntime: "automatic"
       })
     ],
-    root: process.cwd(),
+    // Point Vite to your actual frontend folder
+    root: path.resolve(__dirname, "client"),
+
     base: isProd ? "/" : "/",
+
     build: {
-      outDir: "dist/public",
-      emptyOutDir: false,
+      //  Output to Cloudflare Pages dist folder
+      outDir: path.resolve(__dirname, "dist/public"),
+      emptyOutDir: true,
       sourcemap: false,
-      target: "es2020"
-    },
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "src")
+      target: "es2020",
+      rollupOptions: {
+        // Explicitly tell Vite where the entry HTML file is
+        input: path.resolve(__dirname, "client/index.html")
       }
     },
+
+    resolve: {
+      alias: {
+        // Make sure @ points to your client/src
+        "@": path.resolve(__dirname, "client/src")
+      }
+    },
+
     server: {
       host: true,
       port: 5173
     },
+
     optimizeDeps: {
       include: ["react", "react-dom"]
     }
