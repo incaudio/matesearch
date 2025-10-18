@@ -1,48 +1,47 @@
-// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath } from "url";
+import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-export default defineConfig(({ mode }) => {
-  const isProd = mode === "production";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig(async ({ mode }) => {
+  const plugins = [react(), runtimeErrorOverlay()];
+
+  if (mode !== "production" && process.env.REPL_ID !== undefined) {
+    const { cartographer } = await import("@replit/vite-plugin-cartographer");
+    const { devBanner } = await import("@replit/vite-plugin-dev-banner");
+    plugins.push(cartographer(), devBanner());
+  }
 
   return {
-    plugins: [
-      react({
-        jsxRuntime: "automatic"
-      })
-    ],
-    // Point Vite to your actual frontend folder
-    root: path.resolve(__dirname, "client"),
-
-    base: isProd ? "/" : "/",
-
-    build: {
-      //  Output to Cloudflare Pages dist folder
-      outDir: path.resolve(__dirname, "dist/public"),
-      emptyOutDir: true,
-      sourcemap: false,
-      target: "es2020",
-      rollupOptions: {
-        // Explicitly tell Vite where the entry HTML file is
-        input: path.resolve(__dirname, "client/index.html")
-      }
-    },
-
+    plugins,
     resolve: {
       alias: {
-        // Make sure @ points to your client/src
-        "@": path.resolve(__dirname, "client/src")
-      }
+        "@": path.resolve(__dirname, "client", "src"),
+        "@shared": path.resolve(__dirname, "shared"),
+        "@assets": path.resolve(__dirname, "attached_assets"),
+      },
     },
-
+    root: path.resolve(__dirname, "client"),
+    build: {
+      outDir: path.resolve(__dirname, "dist/public"),
+      emptyOutDir: true,
+    },
     server: {
-      host: true,
-      port: 5173
+      host: "0.0.0.0",
+      port: 5000,
+      strictPort: false,
+      allowedHosts: true,
+      hmr: {
+        clientPort: 443,
+        protocol: "wss",
+      },
+      fs: {
+        strict: true,
+        deny: ["**/.*"],
+      },
     },
-
-    optimizeDeps: {
-      include: ["react", "react-dom"]
-    }
   };
 });
