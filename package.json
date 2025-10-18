@@ -16,10 +16,8 @@
     "db:migrate:d1": "drizzle-kit generate --config=drizzle.config.d1.ts && wrangler d1 migrations apply mate-music-db --local",
     "db:seed:d1": "bash scripts/seed-d1.sh",
     "cf:deploy": "npm run build:cf && wrangler pages deploy dist/public",
-    "cf:dev": "wrangler pages dev dist/public --compatibility-flags nodejs_compat"
-    "preinstall": "npm rebuild esbuild",
-    "build": "vite build",
-    "dev": "vite"
+    "cf:dev": "wrangler pages dev dist/public --compatibility-flags nodejs_compat",
+    "preinstall": "npm rebuild esbuild"
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20251011.0",
@@ -125,9 +123,10 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
-  }
+  },
   "engines": {
-  "node": "22.x",
-  "npm": "10.x"
+    "node": "22.x",
+    "npm": "10.x"
   }
-}
+  }
+    
