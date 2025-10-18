@@ -7,23 +7,22 @@
     "dev": "npx vite",
     "dev:wrangler": "wrangler pages dev dist/public --compatibility-date=2025-01-15 --d1=DB",
     "build": "npx vite build",
-    "build:cf": "npx vite build && npm run build:functions",
     "build:functions": "npx esbuild functions/**/*.ts --bundle --outdir=dist/functions --format=esm --external:@cloudflare/* --platform=browser",
-    "vercel-build": "npx vite build",
+    "build:cf": "npm run build && npm run build:functions",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "npx tsc",
     "db:push": "npx drizzle-kit push",
     "db:migrate:d1": "npx drizzle-kit generate --config=drizzle.config.d1.ts && wrangler d1 migrations apply mate-music-db --local",
     "db:seed:d1": "bash scripts/seed-d1.sh",
     "cf:deploy": "npm run build:cf && wrangler pages deploy dist/public",
-    "cf:dev": "wrangler pages dev dist/public --compatibility-flags nodejs_compat"
+    "cf:dev": "wrangler pages dev dist/public --compatibility-flags nodejs_compat",
+    "preinstall": "npm rebuild esbuild"
   },
   "dependencies": {
     "vite": "^7.1.10",
     "esbuild": "0.25.10",
     "typescript": "5.6.3",
     "tsx": "^4.20.5",
-
     "@cloudflare/workers-types": "^4.20251011.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -108,4 +107,4 @@
     "node": "22.x",
     "npm": "10.x"
   }
-  }
+}
