@@ -1,4 +1,3 @@
-// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -7,42 +6,23 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
 
   return {
-    plugins: [
-      react({
-        jsxRuntime: "automatic"
-      })
-    ],
-    // Point Vite to your actual frontend folder
-    root: path.resolve(__dirname, "client"),
-
+    root: "client",  // <-- client folder
+    plugins: [react()],
     base: isProd ? "/" : "/",
-
     build: {
-      //  Output to Cloudflare Pages dist folder
-      outDir: path.resolve(__dirname, "dist/public"),
+      outDir: "../dist/public", // build output relative to project root
       emptyOutDir: true,
       sourcemap: false,
-      target: "es2020",
-      rollupOptions: {
-        // Explicitly tell Vite where the entry HTML file is
-        input: path.resolve(__dirname, "client/index.html")
-      }
+      target: "es2020"
     },
-
     resolve: {
       alias: {
-        // Make sure @ points to your client/src
         "@": path.resolve(__dirname, "client/src")
       }
     },
-
     server: {
       host: true,
       port: 5173
-    },
-
-    optimizeDeps: {
-      include: ["react", "react-dom"]
     }
   };
 });
