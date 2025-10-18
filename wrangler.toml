@@ -1,0 +1,20 @@
+name = "mate-music-search"
+compatibility_date = "2025-01-15"
+pages_build_output_dir = "dist/public"
+
+[vars]
+NODE_ENV = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mate-music-db"
+database_id = "placeholder"
+
+[build]
+command = "npm run build"
+
+[env.production]
+vars = { NODE_ENV = "production" }
+
+[env.preview]
+vars = { NODE_ENV = "preview" }
