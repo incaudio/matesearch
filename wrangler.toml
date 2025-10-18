@@ -10,9 +10,6 @@ binding = "DB"
 database_name = "mate-music-db"
 database_id = "placeholder"
 
-[build]
-command = "npm run build"
-
 [env.production]
 vars = { NODE_ENV = "production" }
 
