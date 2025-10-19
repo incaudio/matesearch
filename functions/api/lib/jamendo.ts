@@ -1,4 +1,4 @@
-import axios from 'axios';
+// Using native fetch instead of axios to reduce bundle size
 
 const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID || 'ecc95144';
 
@@ -34,19 +34,24 @@ export interface SearchResult {
 
 export async function searchJamendo(query: string, maxResults: number = 20): Promise<SearchResult[]> {
   try {
-    const response = await axios.get('https://api.jamendo.com/v3.0/tracks/', {
-      params: {
-        client_id: JAMENDO_CLIENT_ID,
-        format: 'json',
-        namesearch: query,
-        limit: maxResults * 2,
-        include: 'musicinfo',
-        audioformat: 'mp32',
-        imagesize: 300,
-      }
+    const params = new URLSearchParams({
+      client_id: JAMENDO_CLIENT_ID,
+      format: 'json',
+      namesearch: query,
+      limit: String(maxResults * 2),
+      include: 'musicinfo',
+      audioformat: 'mp32',
+      imagesize: '300',
     });
 
-    const tracks: JamendoTrack[] = response.data.results || [];
+    const response = await fetch(`https://api.jamendo.com/v3.0/tracks/?${params}`);
+    
+    if (!response.ok) {
+      throw new Error(`Jamendo API error: ${response.status}`);
+    }
+
+    const data = await response.json() as { results: JamendoTrack[] };
+    const tracks: JamendoTrack[] = data.results || [];
     
     const results = tracks.map(track => ({
       id: track.id,
@@ -96,19 +101,24 @@ function calculateAIScore(track: JamendoTrack, query: string): number {
 
 export async function getTrendingTracks(limit: number = 20): Promise<SearchResult[]> {
   try {
-    const response = await axios.get('https://api.jamendo.com/v3.0/tracks/', {
-      params: {
-        client_id: JAMENDO_CLIENT_ID,
-        format: 'json',
-        order: 'popularity_total',
-        limit,
-        include: 'musicinfo',
-        audioformat: 'mp32',
-        imagesize: 300,
-      }
+    const params = new URLSearchParams({
+      client_id: JAMENDO_CLIENT_ID,
+      format: 'json',
+      order: 'popularity_total',
+      limit: String(limit),
+      include: 'musicinfo',
+      audioformat: 'mp32',
+      imagesize: '300',
     });
 
-    const tracks: JamendoTrack[] = response.data.results || [];
+    const response = await fetch(`https://api.jamendo.com/v3.0/tracks/?${params}`);
+    
+    if (!response.ok) {
+      throw new Error(`Jamendo API error: ${response.status}`);
+    }
+
+    const data = await response.json() as { results: JamendoTrack[] };
+    const tracks: JamendoTrack[] = data.results || [];
     
     return tracks.map(track => ({
       id: track.id,

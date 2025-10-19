@@ -2,7 +2,7 @@
 // Primary: https://ai-wtsg.onrender.com/chat/
 // Fallback: Free AI APIs
 
-import fetch from 'node-fetch';
+
 
 // List of API endpoints to try in order
 // Note: freegpt.cc is a web interface, not an API, so we use similar free AI APIs

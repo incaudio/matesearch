@@ -1,4 +1,4 @@
-import axios from 'axios';
+// Using native fetch instead of axios to reduce bundle size
 
 export interface RapidApiTrack {
   id: string;
@@ -22,18 +22,22 @@ export async function searchRapidApiMusic(query: string, maxResults: number = 20
   if (!apiKey) throw new Error('RAPIDAPI_KEY not set');
 
   // Example endpoint for Deezer via RapidAPI
-  const url = 'https://deezerdevs-deezer.p.rapidapi.com/search';
-  const headers = {
-    'X-RapidAPI-Key': apiKey,
-    'X-RapidAPI-Host': 'deezerdevs-deezer.p.rapidapi.com',
-  };
-
-  const response = await axios.get(url, {
-    params: { q: query },
-    headers,
+  const url = `https://deezerdevs-deezer.p.rapidapi.com/search?q=${encodeURIComponent(query)}`;
+  
+  const response = await fetch(url, {
+    headers: {
+      'X-RapidAPI-Key': apiKey,
+      'X-RapidAPI-Host': 'deezerdevs-deezer.p.rapidapi.com',
+    },
   });
 
-  return (response.data.data || []).slice(0, maxResults).map((track: any) => ({
+  if (!response.ok) {
+    throw new Error(`RapidAPI error: ${response.status}`);
+  }
+
+  const data = await response.json() as { data: any[] };
+
+  return (data.data || []).slice(0, maxResults).map((track: any) => ({
     id: track.id.toString(),
     title: track.title,
     artist: track.artist.name,

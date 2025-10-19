@@ -1,80 +1,5 @@
-// Reference: youtube blueprint integration
-import { google } from 'googleapis';
-
-let connectionSettings: any;
-
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings?.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
-  }
-  
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('YouTube connection not available - X_REPLIT_TOKEN not found');
-  }
-
-  if (!hostname) {
-    throw new Error('YouTube connection not available - REPLIT_CONNECTORS_HOSTNAME not found');
-  }
-
-  try {
-    const response = await fetch(
-      'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=youtube',
-      {
-        headers: {
-          'Accept': 'application/json',
-          'X_REPLIT_TOKEN': xReplitToken
-        }
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch YouTube connection: ${response.status}`);
-    }
-
-    const data = await response.json();
-    connectionSettings = data.items?.[0];
-
-    if (!connectionSettings) {
-      throw new Error('YouTube connection not configured. Please set up the YouTube connector in Replit.');
-    }
-
-    const accessToken = connectionSettings.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
-
-    if (!accessToken) {
-      throw new Error('YouTube access token not available. Please reconnect the YouTube connector.');
-    }
-    
-    return accessToken;
-  } catch (error) {
-    console.error('YouTube connection error:', error);
-    throw error;
-  }
-}
-
-// WARNING: Never cache this client.
-// Access tokens expire, so a new client must be created each time.
-// Always call this function again to get a fresh client.
-export async function getUncachableYouTubeClient() {
-  const accessToken = await getAccessToken();
-  
-  // Create an OAuth2 client and set the credentials
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({
-    access_token: accessToken
-  });
-  
-  return google.youtube({ 
-    version: 'v3', 
-    auth: oauth2Client 
-  });
-}
+// YouTube Data API - Direct fetch implementation for Cloudflare Workers compatibility
+// No googleapis dependency needed
 
 export interface YouTubeSearchResult {
   id: string;
@@ -89,41 +14,53 @@ export interface YouTubeSearchResult {
   description: string;
 }
 
-export async function searchYouTube(query: string, maxResults: number = 20): Promise<YouTubeSearchResult[]> {
+export async function searchYouTube(query: string, maxResults: number = 20, env?: any): Promise<YouTubeSearchResult[]> {
   try {
-    const youtube = await getUncachableYouTubeClient();
+    const apiKey = env?.YOUTUBE_API_KEY;
     
-    // Search for music videos only
-    const searchResponse = await youtube.search.list({
-      part: ['snippet'],
-      q: query,
-      type: ['video'],
-      videoCategoryId: '10', // Music category
-      maxResults,
-      order: 'relevance',
-    });
-
-    if (!searchResponse.data.items) {
+    if (!apiKey) {
+      console.log('YouTube API key not configured, skipping YouTube search');
       return [];
     }
 
-    const videoIds = searchResponse.data.items
-      .map(item => item.id?.videoId)
-      .filter(Boolean) as string[];
+    // Search for music videos using YouTube Data API v3
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=${maxResults}&order=relevance&key=${apiKey}`;
+    
+    const searchResponse = await fetch(searchUrl);
+    
+    if (!searchResponse.ok) {
+      console.error('YouTube search API error:', searchResponse.status);
+      return [];
+    }
+
+    const searchData: any = await searchResponse.json();
+
+    if (!searchData.items || searchData.items.length === 0) {
+      return [];
+    }
+
+    const videoIds = searchData.items
+      .map((item: any) => item.id?.videoId)
+      .filter(Boolean);
 
     if (videoIds.length === 0) {
       return [];
     }
 
     // Get video details for duration and statistics
-    const videosResponse = await youtube.videos.list({
-      part: ['snippet', 'contentDetails', 'statistics'],
-      id: videoIds,
-    });
+    const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds.join(',')}&key=${apiKey}`;
+    
+    const videosResponse = await fetch(videosUrl);
+    
+    if (!videosResponse.ok) {
+      console.error('YouTube videos API error:', videosResponse.status);
+      return [];
+    }
 
+    const videosData: any = await videosResponse.json();
     const results: YouTubeSearchResult[] = [];
 
-    for (const video of videosResponse.data.items || []) {
+    for (const video of videosData.items || []) {
       if (!video.id) continue;
 
       const duration = parseDuration(video.contentDetails?.duration || 'PT0S');

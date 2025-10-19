@@ -1,16 +1,22 @@
-import axios from 'axios';
+// Using native fetch instead of axios to reduce bundle size
 import { SearchResult } from '@shared/schema';
 
 export async function searchItunes(query: string, maxResults: number = 20): Promise<SearchResult[]> {
-  const url = 'https://itunes.apple.com/search';
-  const response = await axios.get(url, {
-    params: {
-      term: query,
-      media: 'music',
-      limit: maxResults,
-    },
+  const params = new URLSearchParams({
+    term: query,
+    media: 'music',
+    limit: String(maxResults),
   });
-  return (response.data.results || []).map((item: any) => ({
+
+  const response = await fetch(`https://itunes.apple.com/search?${params}`);
+  
+  if (!response.ok) {
+    throw new Error(`iTunes API error: ${response.status}`);
+  }
+
+  const data = await response.json() as { results: any[] };
+  
+  return (data.results || []).map((item: any) => ({
     id: item.trackId ? String(item.trackId) : item.collectionId ? String(item.collectionId) : item.artistId ? String(item.artistId) : item.trackName,
     title: item.trackName || item.collectionName || item.artistName,
     artist: item.artistName,

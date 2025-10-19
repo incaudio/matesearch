@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+
 
 export interface FreefyResult {
   id: string;
