@@ -1,0 +1,28 @@
+name = "mate-music-search"
+compatibility_date = "2025-01-15"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist/public"
+
+[vars]
+NODE_ENV = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mate-music-db"
+database_id = "fc1373a7-6dd4-4f4c-8b0b-8c5b674fef87"
+
+[env.production]
+vars = { NODE_ENV = "production" }
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "mate-music-db"
+database_id = "fc1373a7-6dd4-4f4c-8b0b-8c5b674fef87"
+
+[env.preview]
+vars = { NODE_ENV = "preview" }
+
+[[env.preview.d1_databases]]
+binding = "DB"
+database_name = "mate-music-db"
+database_id = "fc1373a7-6dd4-4f4c-8b0b-8c5b674fef87"
