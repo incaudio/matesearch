@@ -36,6 +36,11 @@ const AI_ENDPOINTS = [
 async function tryEndpoint(endpoint: typeof AI_ENDPOINTS[0], query: string): Promise<string | null> {
   try {
     console.log(`[AI] Trying ${endpoint.name}...`);
+    
+    // Create AbortController for timeout (Cloudflare Workers compatible)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), endpoint.timeout);
+    
     const response = await fetch(endpoint.url, {
       method: 'POST',
       headers: {
@@ -43,8 +48,8 @@ async function tryEndpoint(endpoint: typeof AI_ENDPOINTS[0], query: string): Pro
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(endpoint.buildBody(query)),
-      signal: AbortSignal.timeout(endpoint.timeout),
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
     
     if (!response.ok) {
       console.log(`[AI] ${endpoint.name} returned status ${response.status}`);
