@@ -15,15 +15,18 @@ export interface SoundCloudSearchResult {
   platform: string;
 }
 
-export async function searchSoundCloud(query: string, maxResults: number = 20): Promise<SoundCloudSearchResult[]> {
+export async function searchSoundCloud(query: string, maxResults: number = 20, env?: any): Promise<SoundCloudSearchResult[]> {
   try {
-    // Try multiple client IDs for better reliability
-    const clientIds = [
-      '2t9loNQH90kzJcsFCODdigxfp325aq4z',
-      'a3e059563d7fd3372b49b37f00a00bcf',
-      'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX',
-      'c3e059563d7fd3372b49b37f00a00bcf'
-    ];
+    // Try user-provided client ID first, then fallback to multiple client IDs for better reliability
+    const userClientId = env?.SOUNDCLOUD_CLIENT_ID;
+    const clientIds = userClientId 
+      ? [userClientId]
+      : [
+          '2t9loNQH90kzJcsFCODdigxfp325aq4z',
+          'a3e059563d7fd3372b49b37f00a00bcf',
+          'iZIs9mchVcX5lhVRyQGGAYlNPVldzAoX',
+          'c3e059563d7fd3372b49b37f00a00bcf'
+        ];
     
     let response;
     let lastError;

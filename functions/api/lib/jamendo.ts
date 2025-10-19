@@ -1,7 +1,5 @@
 // Using native fetch instead of axios to reduce bundle size
 
-const JAMENDO_CLIENT_ID = process.env.JAMENDO_CLIENT_ID || 'ecc95144';
-
 export interface JamendoTrack {
   id: string;
   name: string;
@@ -32,8 +30,10 @@ export interface SearchResult {
   aiScore?: number;
 }
 
-export async function searchJamendo(query: string, maxResults: number = 20): Promise<SearchResult[]> {
+export async function searchJamendo(query: string, maxResults: number = 20, env?: any): Promise<SearchResult[]> {
   try {
+    const JAMENDO_CLIENT_ID = env?.JAMENDO_CLIENT_ID || 'ecc95144';
+    
     const params = new URLSearchParams({
       client_id: JAMENDO_CLIENT_ID,
       format: 'json',
@@ -99,8 +99,10 @@ function calculateAIScore(track: JamendoTrack, query: string): number {
   return score;
 }
 
-export async function getTrendingTracks(limit: number = 20): Promise<SearchResult[]> {
+export async function getTrendingTracks(limit: number = 20, env?: any): Promise<SearchResult[]> {
   try {
+    const JAMENDO_CLIENT_ID = env?.JAMENDO_CLIENT_ID || 'ecc95144';
+    
     const params = new URLSearchParams({
       client_id: JAMENDO_CLIENT_ID,
       format: 'json',

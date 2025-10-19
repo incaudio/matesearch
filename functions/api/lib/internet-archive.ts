@@ -15,7 +15,7 @@ export interface InternetArchiveResult {
   aiScore?: number;
 }
 
-export async function searchInternetArchive(query: string, maxResults: number = 20): Promise<InternetArchiveResult[]> {
+export async function searchInternetArchive(query: string, maxResults: number = 20, env?: any): Promise<InternetArchiveResult[]> {
   try {
     const url = 'https://archive.org/advancedsearch.php';
     const params = new URLSearchParams({

@@ -94,8 +94,8 @@ app.get('/api/search', async (c) => {
       searchJamendo(query, 12, c.env).catch((err: any) => { console.error('Jamendo error:', err.message); return []; }),
       searchSoundCloud(query, 12, c.env).catch((err: any) => { console.error('SoundCloud error:', err.message); return []; }),
       searchYouTube(query, 12, c.env).catch((err: any) => { console.error('YouTube error:', err.message); return []; }),
-      searchInternetArchive(query, 12).catch((err: any) => { console.error('Internet Archive error:', err.message); return []; }),
-      searchMixcloud(query, 12).catch((err: any) => { console.error('Mixcloud error:', err.message); return []; }),
+      searchInternetArchive(query, 12, c.env).catch((err: any) => { console.error('Internet Archive error:', err.message); return []; }),
+      searchMixcloud(query, 12, c.env).catch((err: any) => { console.error('Mixcloud error:', err.message); return []; }),
     ]);
     
     let results = [

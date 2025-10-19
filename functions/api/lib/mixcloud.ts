@@ -15,7 +15,7 @@ export interface MixcloudResult {
   aiScore?: number;
 }
 
-export async function searchMixcloud(query: string, maxResults: number = 20): Promise<MixcloudResult[]> {
+export async function searchMixcloud(query: string, maxResults: number = 20, env?: any): Promise<MixcloudResult[]> {
   try {
     // Mixcloud API endpoint
     const url = `https://api.mixcloud.com/search/?q=${encodeURIComponent(query)}&type=cloudcast&limit=${maxResults}`;
