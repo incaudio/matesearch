@@ -1,5 +1,12 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { searchJamendo } from './lib/jamendo';
+import { searchSoundCloud } from './lib/soundcloud';
+import { searchYouTube } from './lib/youtube';
+import { searchInternetArchive } from './lib/internet-archive';
+import { searchMixcloud } from './lib/mixcloud';
+import { getMusicSuggestions, getSearchSuggestions } from './lib/ai-suggestions';
+import { freegptChat } from './lib/freegpt';
 
 type Env = {
   DB: D1Database;
@@ -81,14 +88,6 @@ app.get('/api/search', async (c) => {
     if (!query || typeof query !== 'string' || !query.trim()) {
       return c.json({ error: 'Missing or invalid query' }, 400);
     }
-
-    const [searchJamendo, searchSoundCloud, searchYouTube, searchInternetArchive, searchMixcloud] = await Promise.all([
-      import('./lib/jamendo').then(m => m.searchJamendo),
-      import('./lib/soundcloud').then(m => m.searchSoundCloud),
-      import('./lib/youtube').then(m => m.searchYouTube),
-      import('./lib/internet-archive').then(m => m.searchInternetArchive),
-      import('./lib/mixcloud').then(m => m.searchMixcloud),
-    ]);
 
     const [jamendo, soundcloud, youtube, internetArchive, mixcloud] = await Promise.all([
       searchJamendo(query, 12, c.env).catch((err: any) => { console.error('Jamendo error:', err.message); return []; }),
@@ -184,7 +183,6 @@ app.get('/api/song-info', async (c) => {
       track = query.trim();
     }
 
-    const { searchYouTube } = await import('./lib/youtube');
     try {
       const youtubeResults = await searchYouTube(query, 1, c.env);
       if (youtubeResults.length > 0) {
@@ -248,7 +246,6 @@ app.get('/api/song-info', async (c) => {
 app.post("/api/ai/suggestions", async (c) => {
   try {
     const { userHistory } = await c.req.json();
-    const { getMusicSuggestions } = await import("./lib/ai-suggestions");
     const suggestions = await getMusicSuggestions(userHistory || []);
     return c.json({ suggestions });
   } catch (e) {
@@ -259,7 +256,6 @@ app.post("/api/ai/suggestions", async (c) => {
 app.post("/api/ai/search-suggestions", async (c) => {
   try {
     const { currentInput, userHistory } = await c.req.json();
-    const { getSearchSuggestions } = await import("./lib/ai-suggestions");
     const suggestions = await getSearchSuggestions(currentInput || "", userHistory || []);
     return c.json({ suggestions });
   } catch (e) {
@@ -273,7 +269,6 @@ app.post("/api/ai/command", async (c) => {
     if (!command || typeof command !== "string") {
       return c.json({ error: "Missing command" }, 400);
     }
-    const { freegptChat } = await import("./lib/freegpt");
     const prompt = `You are a world-class AI assistant for a music app. You answer ANY question about the music industry, including:\n\n- Artist news, biographies, and life stories (past and present)\n- Music history, genres, and movements (from the 19th century to today)\n- Songs, albums, and their stories\n- Record labels, producers, and the business of music\n- Lyrics, songwriting, and composition\n- Music technology, instruments, and production\n- Music awards, charts, and records\n- Anything factual, creative, or newsworthy about music\n\nIf the user asks about anything outside the music world, politely refuse and say you only answer music-related questions. If the user asks for music, search, play, or playlist actions, suggest an action in JSON: { action: '...' }.\n\nUser: ${command}`;
     const reply = await freegptChat({
       messages: [
@@ -294,7 +289,6 @@ app.post("/api/vibe-match", async (c) => {
     if (!query || typeof query !== 'string' || !query.trim()) {
       return c.json({ error: 'Missing or invalid query' }, 400);
     }
-    const { freegptChat } = await import("./lib/freegpt");
     const prompt = `You are a music vibe and trend expert. Given the user's search query, suggest:\n- 3-5 musical vibes that match the query\n- 5 trending or similar songs (title and artist)\n\nReply in JSON:\n{\n  "vibes": ["vibe1", "vibe2", ...],\n  "trendingSongs": [{"title": "...", "artist": "..."}, ...]\n}\n\nQuery: ${query}`;
     const text = await freegptChat({
       messages: [
